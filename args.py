@@ -11,11 +11,17 @@ parser.add_argument(
 parser.add_argument(
   '--batch_size', default=100, type=int, help='Batch size')
 
-# FL Parameteres
+# Training Parameters
+parser.add_argument(
+  '--steps', default=10, type=int, help='Number of training steps')
+parser.add_argument(
+  '--dist', default=True, type=bool, help='Distributed training')
+
+# FL Parameters
 parser.add_argument(
   '--iid_partion', default=False, type=bool, help='Do a non-iid partition of the dataset')
 parser.add_argument(
-  '--num_devices', default=3, type=int, help='Number of devices')
+  '--num_devices', default=2, type=int, help='Number of devices')
 
 
 def get_args():

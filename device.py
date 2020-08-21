@@ -15,6 +15,12 @@ class DeviceBase(ABC):
   def __init__(self, **kwargs):
     raise NotImplementedError('Device not implemented')
 
+  def get_config(self):
+    raise NotImplementedError
+
+  def run(self):
+    raise NotImplementedError
+
 
 class Device(DeviceBase):
   def __init__(self, rank, dataset):
