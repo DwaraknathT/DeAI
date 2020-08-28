@@ -13,7 +13,10 @@ from torch.multiprocessing import Process
 from args import get_args
 from dataset import get_data
 from models.lenet import SimpleConvNet
+from utils import get_logger, setup_dirs
+setup_dirs()
 
+logger = get_logger(__name__)
 args = get_args()
 
 """ Gradient averaging. """
@@ -36,7 +39,6 @@ def run(rank, size):
                         lr=0.01, momentum=0.5)
 
   num_batches = ceil(len(trainset.dataset) / float(args.batch_size))
-  print(num_batches)
   for epoch in range(10):
     epoch_loss = 0.0
     for data, target in trainset:
@@ -55,12 +57,16 @@ def init_process(rank, size, fn, backend='gloo'):
   """ Initialize the distributed environment. """
   os.environ['MASTER_ADDR'] = '127.0.0.1'
   os.environ['MASTER_PORT'] = '29500'
+  logger.info('OS.Environ.MASTER_ADDR: {}'.format(os.environ['MASTER_ADDR']))
+  logger.info('OS.Environ.MASTER_PORT: {}'.format(os.environ['MASTER_PORT']))
   dist.init_process_group(backend, rank=rank, world_size=size)
   fn(rank, size)
 
 
 if __name__ == "__main__":
   size = args.num_devices
+  logger.info('Starting distributed training with {} devices'.format(size))
+  logger.info('Run arguments::{}'.format(vars(args)))
   processes = []
   for rank in range(size):
     p = Process(target=init_process, args=(rank, size, run))

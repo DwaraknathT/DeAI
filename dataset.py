@@ -1,12 +1,12 @@
 from __future__ import print_function
 
-from collections import defaultdict
+from utils import get_logger
 from random import Random
-
 import torch
 import torch.distributed as dist
 import torchvision
 import torchvision.transforms as transforms
+logger = get_logger(__name__)
 
 mean = {
   'mnist': (0.1307,),
@@ -44,7 +44,6 @@ class Partition(object):
 
 
 class DataPartitioner(object):
-
   def __init__(self, data, sizes=[0.5, 0.5, 0.5], seed=1234):
     self.data = data
     self.partitions = []
@@ -104,7 +103,7 @@ def get_data(args):
     args.num_classes = 100
 
   if args.dist:
-    print('Sharding dataset')
+    logger.info('Creating dataset shard for device {}'.format(dist.get_rank()))
     size = dist.get_world_size()
     args.batch_size = int(args.batch_size / float(size))
     partition_sizes = [1.0 / size for _ in range(size)]
@@ -121,26 +120,3 @@ def get_data(args):
     testset, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
   return trainloader, testloader
-
-
-def make_data_partition(args):
-  """
-  Make partitions of a given dataset based on
-  number of workers
-  :param args: Argument object
-  :return: Dictionary with dataset partitions for each worker
-  """
-  trainloader, testloader = get_data(args)
-  device_specific_dataset = defaultdict(list)
-  num_batches = len(trainloader)
-  num_batches_per_device = num_batches // args.num_devices
-  device_id = 0
-  for batch_idx, (data, target) in enumerate(trainloader):
-    if batch_idx % num_batches_per_device == 0 and batch_idx != 0:
-      device_id += 1
-    device_specific_dataset[device_id].append(data)
-
-  device_specific_dataset = {key: iter(device_specific_dataset[key])
-                             for key in device_specific_dataset.keys()}
-
-  return device_specific_dataset
